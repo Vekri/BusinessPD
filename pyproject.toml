@@ -1,2 +1,19 @@
+[project]
+name = "business-pd"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scikit-learn>=1.4",
+  "joblib>=1.3",
+  "sqlalchemy>=2.0",
+  "psycopg2-binary>=2.9",
+  "python-dotenv>=1.0",
+  "fastapi>=0.116",
+  "uvicorn>=0.32",
+  "httpx>=0.27",
+]
+
 [tool.vercel]
 entrypoint = "api.main:app"
