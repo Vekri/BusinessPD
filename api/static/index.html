@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Business PD assessment</title>
+  <style>
+    :root {
+      --paper: #f3efe6;
+      --card: #fffcf7;
+      --ink: #1d1a16;
+      --muted: #5e584f;
+      --line: #d9d1c3;
+      --green: #1f4d3a;
+      --amber: #8a5a12;
+      --red: #8c2f2f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px/1.45 "Segoe UI", Georgia, sans-serif;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: end;
+      padding: 28px 40px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { font-family: Georgia, serif; font-size: 34px; font-weight: 500; margin: 0; }
+    header p { margin: 6px 0 0; color: var(--muted); max-width: 640px; }
+    main {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 28px;
+      padding: 28px 40px 48px;
+    }
+    form, .board {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    h2 { font-family: Georgia, serif; font-size: 22px; font-weight: 500; margin: 0 0 14px; }
+    .presets { display: flex; gap: 8px; margin-bottom: 16px; }
+    button, .ghost {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+    }
+    button[type="submit"] { background: var(--ink); color: white; width: 100%; margin-top: 8px; }
+    .ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+    label { display: block; margin: 10px 0; color: var(--muted); font-size: 13px; }
+    input {
+      width: 100%;
+      margin-top: 4px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      color: var(--ink);
+      background: white;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .result-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+    .pd { font-family: Georgia, serif; font-size: 48px; line-height: 1; margin: 0; }
+    .band { margin: 6px 0 0; font-weight: 600; }
+    .band.low, .pass { color: var(--green); }
+    .band.moderate { color: var(--amber); }
+    .band.high, .band.very { color: var(--red); }
+    .empty { color: var(--muted); margin: 0; }
+    ol { list-style: none; margin: 18px 0 0; padding: 0; }
+    li.step {
+      border-top: 1px solid var(--line);
+      padding: 16px 0 8px;
+    }
+    li.step h3 { margin: 0 0 6px; font-size: 16px; }
+    li.step p { margin: 0 0 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    td { padding: 4px 0; vertical-align: top; }
+    td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    .detail { display: block; color: var(--muted); font-size: 12px; }
+    .error { color: var(--red); }
+    .story {
+      display: grid;
+      gap: 16px;
+      padding: 24px 40px 0;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+    }
+    .panel h2 { margin-bottom: 8px; }
+    .panel p { margin: 0 0 10px; }
+    .panel p:last-child { margin-bottom: 0; }
+    .split { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
+    .help { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .help article {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #faf7f1;
+    }
+    .help h3, .tech h3 { margin: 0 0 4px; font-size: 15px; }
+    .help p, .tech p { margin: 0; color: var(--muted); font-size: 14px; }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 14px 0 4px;
+    }
+    .flow span {
+      background: #faf7f1;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    .flow i { color: var(--muted); font-style: normal; }
+    .lanes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+    .lanes article, .tech article {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+    .lanes h3 { margin: 0 0 4px; font-size: 15px; }
+    .lanes p { margin: 0; color: var(--muted); font-size: 14px; }
+    .tech { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 16px; margin-top: 8px; }
+    .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    ol.plain { margin: 8px 0 0; padding-left: 20px; }
+    ol.plain li { margin: 8px 0; }
+    ol.plain strong { font-weight: 600; }
+    @media (max-width: 900px) {
+      header, main, .story { padding-left: 16px; padding-right: 16px; }
+      main, .split, .help, .columns, .lanes, .tech { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Business PD assessment</h1>
+      <p>One application in, a probability of default out, with every stage of the review shown in order.</p>
+    </div>
+  </header>
+  <section class="story">
+    <div class="split">
+      <article class="panel">
+        <h2>Business problem</h2>
+        <p>A lender has to decide, for every business loan, how likely that borrower is to default. The file already contains the facts: revenue, profit, debt, assets, cash flow, loan size, credit score, debt-to-income, recent delinquencies, and years in business.</p>
+        <p>Reading those facts one file at a time is slow, and two reviewers can weigh the same numbers differently. The book also needs a stored score so a later question can find the latest result for a customer, an industry, or a risk cutoff.</p>
+        <p>The label used here is a teaching target: 0 means Good and 1 means Bad. A live book would use the institution’s own default policy. The risk bands below 5%, from 5% to 10%, through 20%, and above 20% are settings of this project.</p>
+      </article>
+      <article class="panel">
+        <h2>How this helps</h2>
+        <div class="help">
+          <article>
+            <h3>One review, every file</h3>
+            <p>The same checks, ratios, and model run for each application, so the score is comparable across the book.</p>
+          </article>
+          <article>
+            <h3>A number and a class</h3>
+            <p>The result is a probability of default and a risk class the reviewer can read without opening the model file.</p>
+          </article>
+          <article>
+            <h3>The reason stays visible</h3>
+            <p>Each stage is written down: the inputs, the checks, the ratios, the model drivers, and the band the score fell into.</p>
+          </article>
+          <article>
+            <h3>The book stays queryable</h3>
+            <p>The customer, the loan, and the prediction are stored, so a later lookup or a plain-language question reads the same record.</p>
+          </article>
+        </div>
+      </article>
+    </div>
+    <article class="panel">
+      <h2>Architecture</h2>
+      <p>A synthetic book is cleaned, turned into ratios, split, and used to train one logistic model. Scores are stored in PostgreSQL. The API is the only door the page, the tools, and the question router use.</p>
+      <div class="flow" aria-label="System flow">
+        <span>Synthetic book</span><i>→</i>
+        <span>Clean, ratios, split</span><i>→</i>
+        <span>Logistic model</span><i>→</i>
+        <span>PostgreSQL</span><i>→</i>
+        <span>FastAPI</span>
+      </div>
+      <div class="lanes">
+        <article>
+          <h3>This page</h3>
+          <p>Takes the application you type and walks the assessment one stage at a time.</p>
+        </article>
+        <article>
+          <h3>MCP tools</h3>
+          <p>Six tools call the API for a customer, a score, a search, the portfolio, or the model card. They do not accept SQL.</p>
+        </article>
+        <article>
+          <h3>Question router</h3>
+          <p>A plain question such as “PD for B1001” or “PD above 15%” is sent to the matching API route.</p>
+        </article>
+      </div>
+    </article>
+    <article class="panel">
+      <h2>Technologies</h2>
+      <div class="tech">
+        <article>
+          <h3>Python, pandas, NumPy</h3>
+          <p>Build the 10,000-row book, check each row, and calculate the ratios.</p>
+        </article>
+        <article>
+          <h3>scikit-learn</h3>
+          <p>Standardize the training rows, fit logistic regression, and score a new application.</p>
+        </article>
+        <article>
+          <h3>joblib</h3>
+          <p>Saves model pd_model_v1 so scoring uses the same fitted pipeline.</p>
+        </article>
+        <article>
+          <h3>PostgreSQL 16</h3>
+          <p>Holds the customer, the loan application, and each prediction.</p>
+        </article>
+        <article>
+          <h3>SQLAlchemy</h3>
+          <p>Writes and reads those three tables from the API.</p>
+        </article>
+        <article>
+          <h3>FastAPI</h3>
+          <p>Serves this page, the score, lookups, the portfolio, and the model card.</p>
+        </article>
+        <article>
+          <h3>Docker Compose</h3>
+          <p>Runs the database and the API together.</p>
+        </article>
+        <article>
+          <h3>MCP and the router</h3>
+          <p>Lets a client ask in tools or in a sentence, through the same API.</p>
+        </article>
+      </div>
+    </article>
+    <div class="columns">
+      <article class="panel">
+        <h2>How the book was built</h2>
+        <ol class="plain">
+          <li><strong>Synthetic data.</strong> 10,000 businesses, seed 42. About 23.7% are labeled Bad.</li>
+          <li><strong>Cleaning.</strong> Blank ids, duplicate ids, missing numbers, and out-of-range values are rejected. Values are not clipped.</li>
+          <li><strong>Ratios.</strong> Debt to asset, loan to revenue, profit margin, and cash-flow coverage.</li>
+          <li><strong>Split.</strong> Stratified 80/20 on the label, seed 42. Train 8,000, holdout 2,000.</li>
+          <li><strong>Training.</strong> Scaler and logistic regression fit on the training file only. Class weights are balanced.</li>
+          <li><strong>Holdout.</strong> ROC-AUC 0.884, Gini 0.767, KS 0.615. The score ranks risk. It is a ranking score from balanced training, so the probability sits above the observed default rate.</li>
+          <li><strong>Storage.</strong> Schema, then one customer, one application, and one score per business.</li>
+          <li><strong>Access.</strong> SQL reports, the API, Docker, six MCP tools, the question router, and this page.</li>
+        </ol>
+      </article>
+      <article class="panel">
+        <h2>What you will see</h2>
+        <p>Enter an application, or use Higher risk and Stronger file, then choose Run assessment. The review appears in this order:</p>
+        <ol class="plain">
+          <li><strong>Application received.</strong> The figures you entered.</li>
+          <li><strong>Data checks.</strong> Eight rules, each pass or fail.</li>
+          <li><strong>Banking ratios.</strong> The four ratios and the formula behind each one.</li>
+          <li><strong>Model score.</strong> The strongest drivers and whether each one raises or lowers default risk.</li>
+          <li><strong>Risk class.</strong> The probability and the band it falls in.</li>
+          <li><strong>Saved to the book.</strong> Customer, scored application, and prediction.</li>
+          <li><strong>Assessment.</strong> One sentence with the business, the probability, and the class.</li>
+        </ol>
+      </article>
+    </div>
+  </section>
+  <main>
+    <form id="application">
+      <h2>Application</h2>
+      <div class="presets">
+        <button class="ghost" type="button" id="higher">Higher risk</button>
+        <button class="ghost" type="button" id="stronger">Stronger file</button>
+      </div>
+      <label>Business id<input name="business_id" required value="B1001"></label>
+      <label>Business name<input name="business_name" value="Sample Trading"></label>
+      <label>Industry<input name="industry" value="Retail"></label>
+      <div class="grid">
+        <label>Annual revenue<input name="annual_revenue" type="number" step="0.01" required value="750000"></label>
+        <label>Profit<input name="profit" type="number" step="0.01" required value="85000"></label>
+        <label>Total debt<input name="total_debt" type="number" step="0.01" required value="300000"></label>
+        <label>Total assets<input name="total_assets" type="number" step="0.01" required value="850000"></label>
+        <label>Cash flow<input name="cash_flow" type="number" step="0.01" required value="110000"></label>
+        <label>Loan amount<input name="loan_amount" type="number" step="0.01" required value="200000"></label>
+        <label>Credit score<input name="credit_score" type="number" required value="680"></label>
+        <label>DTI<input name="dti" type="number" step="0.0001" required value="0.42"></label>
+        <label>Delinquencies, 12 months<input name="delinq_12m" type="number" required value="1"></label>
+        <label>Years in business<input name="years_in_business" type="number" required value="6"></label>
+      </div>
+      <button type="submit" id="run">Run assessment</button>
+      <p class="error" id="form-error" hidden></p>
+    </form>
+    <section class="board" aria-live="polite">
+      <div class="result-head">
+        <h2>Review</h2>
+        <div id="headline"></div>
+      </div>
+      <p class="empty" id="placeholder">The steps will appear here, one at a time.</p>
+      <ol id="steps"></ol>
+    </section>
+  </main>
+  <script>
+    const higher = {
+      business_id: "B1001", business_name: "Sample Trading", industry: "Retail",
+      annual_revenue: 750000, profit: 85000, total_debt: 300000, total_assets: 850000,
+      cash_flow: 110000, loan_amount: 200000, credit_score: 680, dti: 0.42,
+      delinq_12m: 1, years_in_business: 6
+    };
+    const stronger = {
+      business_id: "B2002", business_name: "Harbor Forge Healthcare", industry: "Healthcare",
+      annual_revenue: 1356383.59, profit: 163091.48, total_debt: 336877.32, total_assets: 1482170,
+      cash_flow: 337190.07, loan_amount: 216460.65, credit_score: 788, dti: 0.2332,
+      delinq_12m: 0, years_in_business: 12
+    };
+    const form = document.querySelector("#application");
+    const steps = document.querySelector("#steps");
+    const placeholder = document.querySelector("#placeholder");
+    const headline = document.querySelector("#headline");
+    const error = document.querySelector("#form-error");
+
+    function fill(values) {
+      for (const [name, value] of Object.entries(values)) {
+        form.elements[name].value = value;
+      }
+    }
+    document.querySelector("#higher").addEventListener("click", () => fill(higher));
+    document.querySelector("#stronger").addEventListener("click", () => fill(stronger));
+
+    function bandClass(name) {
+      if (!name) return "";
+      if (name.startsWith("Low")) return "low";
+      if (name.startsWith("Moderate")) return "moderate";
+      if (name.startsWith("Very")) return "very";
+      return "high";
+    }
+
+    function renderStep(step, index) {
+      const item = document.createElement("li");
+      item.className = "step";
+      const rows = (step.items || []).map((row) => {
+        const tone = row.value === "Pass" ? "pass" : row.value === "Fail" ? "error" : "";
+        const detail = row.detail ? `<span class="detail">${row.detail}</span>` : "";
+        return `<tr><td>${row.label}${detail}</td><td class="${tone}">${row.value}</td></tr>`;
+      }).join("");
+      item.innerHTML = `<h3>${index}. ${step.title}</h3><p>${step.summary}</p>${rows ? `<table>${rows}</table>` : ""}`;
+      steps.appendChild(item);
+      item.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      error.hidden = true;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      for (const key of ["annual_revenue", "profit", "total_debt", "total_assets", "cash_flow", "loan_amount", "dti"]) {
+        payload[key] = Number(payload[key]);
+      }
+      for (const key of ["credit_score", "delinq_12m", "years_in_business"]) {
+        payload[key] = Number(payload[key]);
+      }
+      if (!payload.business_name) delete payload.business_name;
+      if (!payload.industry) delete payload.industry;
+      steps.replaceChildren();
+      headline.replaceChildren();
+      placeholder.hidden = false;
+      placeholder.textContent = "Running the review…";
+      const response = await fetch("/assess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        placeholder.hidden = false;
+        placeholder.textContent = "";
+        error.hidden = false;
+        error.textContent = body.detail || "The assessment could not be completed.";
+        return;
+      }
+      placeholder.hidden = true;
+      body.steps.forEach((step, index) => {
+        setTimeout(() => {
+          renderStep(step, index + 1);
+          if (index === body.steps.length - 1 && body.pd != null) {
+            headline.innerHTML = `<p class="pd">${(body.pd * 100).toFixed(2)}%</p><p class="band ${bandClass(body.risk_class)}">${body.risk_class}</p>`;
+          }
+        }, index * 700);
+      });
+    });
+  </script>
+</body>
+</html>

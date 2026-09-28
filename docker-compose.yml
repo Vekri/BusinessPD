@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: business-pd-postgres
+    environment:
+      POSTGRES_USER: pd_user
+      POSTGRES_PASSWORD: pd_password
+      POSTGRES_DB: business_pd
+    ports:
+      - "5434:5432"
+    volumes:
+      - business_pd_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pd_user -d business_pd"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    container_name: business-pd-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pd_user:pd_password@postgres:5432/business_pd
+    ports:
+      - "8001:8000"
+
+volumes:
+  business_pd_data:

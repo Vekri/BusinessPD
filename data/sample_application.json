@@ -1,0 +1,13 @@
+{
+  "business_id": "B1001",
+  "annual_revenue": 750000,
+  "profit": 85000,
+  "total_debt": 300000,
+  "total_assets": 850000,
+  "credit_score": 680,
+  "dti": 0.42,
+  "delinq_12m": 1,
+  "years_in_business": 6,
+  "cash_flow": 110000,
+  "loan_amount": 200000
+}
