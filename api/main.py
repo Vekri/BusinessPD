@@ -238,7 +238,22 @@ def create_app(artifact: dict | None = None) -> FastAPI:
             report = json.loads(EVALUATION_PATH.read_text(encoding="utf-8"))
             info["holdout"] = {
                 key: report[key]
-                for key in ("rows", "roc_auc", "gini", "ks", "brier", "calibration_mae")
+                for key in (
+                    "rows",
+                    "threshold",
+                    "accuracy",
+                    "precision",
+                    "recall",
+                    "f1",
+                    "roc_auc",
+                    "gini",
+                    "ks",
+                    "brier",
+                    "calibration_mae",
+                    "confusion_matrix",
+                    "calibration",
+                    "dataset",
+                )
                 if key in report
             }
         return info

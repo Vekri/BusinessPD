@@ -44,7 +44,7 @@ python -m src.load
 | Swagger | http://127.0.0.1:8001/docs |
 | PostgreSQL | `127.0.0.1:5434`, database `business_pd` |
 
-Open the client walkthrough, enter an application, and choose **Run assessment**. The page shows each stage in order: the inputs, the data checks, the four banking ratios, the model drivers, the probability and risk class, the database save, and a written assessment.
+Open the client walkthrough, enter an application, and choose **Run assessment**. The page shows each stage in order: the inputs, the data checks, the four banking ratios, the model drivers, the probability and risk class, the database save, and a written assessment. The same page charts the holdout: ranking metrics, predicted probability against the observed default rate by score decile, and the confusion matrix at a 0.50 cutoff.
 
 The same project is published at https://github.com/Vekri/BusinessPD. Vercel runs the FastAPI app from `api.main:app`. The hosted page still scores an application. A PostgreSQL connection is what writes the customer, the loan, and the prediction; without `DATABASE_URL` the score stays on the page.
 

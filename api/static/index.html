@@ -137,9 +137,24 @@
     ol.plain { margin: 8px 0 0; padding-left: 20px; }
     ol.plain li { margin: 8px 0; }
     ol.plain strong { font-weight: 600; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0; }
+    .metrics div { border-top: 2px solid var(--ink); padding-top: 8px; }
+    .metrics strong { display: block; font-family: Georgia, serif; font-size: 28px; font-weight: 500; line-height: 1; }
+    .metrics span { color: var(--muted); font-size: 13px; }
+    .val-grid { display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 28px; align-items: start; }
+    .val-grid h3 { margin: 0 0 8px; font-size: 15px; }
+    .caption { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+    .chart { width: 100%; height: auto; }
+    .matrix { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .matrix th, .matrix td { border: 1px solid var(--line); padding: 10px 8px; text-align: center; }
+    .matrix th { font-weight: 600; background: #faf7f1; }
+    .matrix td strong { display: block; font-family: Georgia, serif; font-size: 22px; font-weight: 500; }
+    .matrix .hit { background: #e7f0ea; }
+    .legend { display: flex; gap: 16px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+    .swatch { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
     @media (max-width: 900px) {
       header, main, .story { padding-left: 16px; padding-right: 16px; }
-      main, .split, .help, .columns, .lanes, .tech { grid-template-columns: 1fr; }
+      main, .split, .help, .columns, .lanes, .tech, .val-grid, .metrics { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -242,6 +257,27 @@
         </article>
       </div>
     </article>
+    <article class="panel" id="validation">
+      <h2>Holdout validation</h2>
+      <p>These figures are from the 2,000 businesses held out of training. The score orders risk: the observed default rate rises from the lowest decile to the highest. Predicted probabilities sit above those observed rates because training treats Good and Bad as equally common.</p>
+      <div class="metrics" id="metrics"></div>
+      <div class="val-grid">
+        <div>
+          <h3>Predicted probability and observed default rate by score decile</h3>
+          <div id="calibration"></div>
+          <div class="legend">
+            <span><i class="swatch" style="background:#1d1a16"></i>Mean predicted PD</span>
+            <span><i class="swatch" style="background:#1f4d3a"></i>Observed default rate</span>
+          </div>
+          <p class="caption">Source: holdout file test.csv, model pd_model_v1. Each decile has 200 businesses. Decile 1 is the lowest predicted probability. The vertical axis is a rate from 0 to 1.</p>
+        </div>
+        <div>
+          <h3>Classification at a 0.50 probability cutoff</h3>
+          <div id="matrix"></div>
+          <p class="caption">Counts on the same 2,000 holdout businesses. Good is label 0 and Bad is label 1.</p>
+        </div>
+      </div>
+    </article>
     <div class="columns">
       <article class="panel">
         <h2>How the book was built</h2>
@@ -306,6 +342,99 @@
     </section>
   </main>
   <script>
+    const holdout = {
+      rows: 2000,
+      accuracy: 0.813,
+      precision: 0.5792778649921507,
+      recall: 0.7768421052631579,
+      f1: 0.6636690647482014,
+      roc_auc: 0.8837025021570319,
+      gini: 0.7674050043140639,
+      ks: 0.6146678170836929,
+      confusion_matrix: { true_negative: 1257, false_positive: 268, false_negative: 106, true_positive: 369 },
+      calibration: [
+        { bin: 1, mean_predicted_pd: 0.0198, observed_default_rate: 0.005 },
+        { bin: 2, mean_predicted_pd: 0.06, observed_default_rate: 0.045 },
+        { bin: 3, mean_predicted_pd: 0.1074, observed_default_rate: 0.04 },
+        { bin: 4, mean_predicted_pd: 0.1635, observed_default_rate: 0.055 },
+        { bin: 5, mean_predicted_pd: 0.233, observed_default_rate: 0.09 },
+        { bin: 6, mean_predicted_pd: 0.3285, observed_default_rate: 0.125 },
+        { bin: 7, mean_predicted_pd: 0.4544, observed_default_rate: 0.23 },
+        { bin: 8, mean_predicted_pd: 0.6225, observed_default_rate: 0.315 },
+        { bin: 9, mean_predicted_pd: 0.8158, observed_default_rate: 0.555 },
+        { bin: 10, mean_predicted_pd: 0.9721, observed_default_rate: 0.915 }
+      ]
+    };
+
+    function fmt(value) {
+      return Number(value).toFixed(3);
+    }
+
+    function renderValidation(report) {
+      const metrics = [
+        ["ROC-AUC", report.roc_auc],
+        ["Gini", report.gini],
+        ["KS", report.ks],
+        ["Accuracy", report.accuracy],
+        ["Precision", report.precision],
+        ["Recall", report.recall],
+        ["F1", report.f1],
+        ["Holdout rows", report.rows]
+      ];
+      document.querySelector("#metrics").innerHTML = metrics.map(([label, value]) => {
+        const shown = label === "Holdout rows" ? Number(value).toLocaleString("en-US") : fmt(value);
+        return `<div><strong>${shown}</strong><span>${label}</span></div>`;
+      }).join("");
+
+      const bins = report.calibration;
+      const width = 640;
+      const height = 280;
+      const left = 46;
+      const right = 12;
+      const top = 12;
+      const bottom = 36;
+      const plotW = width - left - right;
+      const plotH = height - top - bottom;
+      const group = plotW / bins.length;
+      const bar = group * 0.32;
+      const yOf = (rate) => top + plotH - rate * plotH;
+      let bars = "";
+      let labels = "";
+      bins.forEach((bin, index) => {
+        const x = left + index * group;
+        const predH = bin.mean_predicted_pd * plotH;
+        const obsH = bin.observed_default_rate * plotH;
+        bars += `<rect x="${(x + group * 0.16).toFixed(1)}" y="${yOf(bin.mean_predicted_pd).toFixed(1)}" width="${bar.toFixed(1)}" height="${predH.toFixed(1)}" fill="#1d1a16"><title>Decile ${bin.bin} predicted PD ${fmt(bin.mean_predicted_pd)}</title></rect>`;
+        bars += `<rect x="${(x + group * 0.52).toFixed(1)}" y="${yOf(bin.observed_default_rate).toFixed(1)}" width="${bar.toFixed(1)}" height="${obsH.toFixed(1)}" fill="#1f4d3a"><title>Decile ${bin.bin} observed default rate ${fmt(bin.observed_default_rate)}</title></rect>`;
+        labels += `<text x="${(x + group / 2).toFixed(1)}" y="${height - 14}" text-anchor="middle" font-size="11" fill="#5e584f">${bin.bin}</text>`;
+      });
+      let grid = "";
+      [0, 0.25, 0.5, 0.75, 1].forEach((tick) => {
+        const y = yOf(tick);
+        grid += `<line x1="${left}" y1="${y}" x2="${width - right}" y2="${y}" stroke="#d9d1c3"/>`;
+        grid += `<text x="${left - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#5e584f">${tick.toFixed(2)}</text>`;
+      });
+      document.querySelector("#calibration").innerHTML = `<svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Grouped bar chart of mean predicted probability of default and observed default rate for ten holdout score deciles">
+        ${grid}${bars}${labels}
+        <text x="${left + plotW / 2}" y="${height - 2}" text-anchor="middle" font-size="11" fill="#5e584f">Score decile</text>
+        <text x="14" y="${top + plotH / 2}" text-anchor="middle" font-size="11" fill="#5e584f" transform="rotate(-90 14 ${top + plotH / 2})">Rate</text>
+      </svg>`;
+
+      const matrix = report.confusion_matrix;
+      document.querySelector("#matrix").innerHTML = `<table class="matrix">
+        <thead><tr><th></th><th>Predicted Good</th><th>Predicted Bad</th></tr></thead>
+        <tbody>
+          <tr><th>Actual Good</th><td class="hit"><strong>${matrix.true_negative.toLocaleString("en-US")}</strong>True negative</td><td><strong>${matrix.false_positive.toLocaleString("en-US")}</strong>False positive</td></tr>
+          <tr><th>Actual Bad</th><td><strong>${matrix.false_negative.toLocaleString("en-US")}</strong>False negative</td><td class="hit"><strong>${matrix.true_positive.toLocaleString("en-US")}</strong>True positive</td></tr>
+        </tbody>
+      </table>`;
+    }
+
+    renderValidation(holdout);
+    fetch("/model").then((response) => response.json()).then((body) => {
+      if (body.holdout && body.holdout.calibration) renderValidation(body.holdout);
+    }).catch(() => {});
+
     const higher = {
       business_id: "B1001", business_name: "Sample Trading", industry: "Retail",
       annual_revenue: 750000, profit: 85000, total_debt: 300000, total_assets: 850000,
